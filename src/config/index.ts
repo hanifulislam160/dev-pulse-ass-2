@@ -1,0 +1,1 @@
+console.log("Config loaded", process.env.PORT);
