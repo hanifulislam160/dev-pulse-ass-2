@@ -1,11 +1,10 @@
-import dotenv from 'dotenv'
-import { env } from 'process'
+import dotenv from "dotenv";
+import { env } from "process";
 
-dotenv.config()
+dotenv.config({ quiet: true });
 
 const config = {
-    port: env.PORT
-
-
-}
+  port: env.PORT,
+  databse_url: env.DATABASE_URL,
+};
 export default config;
