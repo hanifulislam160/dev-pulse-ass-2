@@ -117,10 +117,90 @@ const getSingleIssueFromDB = async (id: number): Promise<SingleIssue | null> => 
 };
 
 
+interface UpdateIssuePayload {
+  title?: string;
+  description?: string;
+  type?: "bug" | "feature_request";
+}
+
+const updateIssue = async (
+  issueId: number,
+  user: any,
+  payload: UpdateIssuePayload,
+) => {
+  // Find existing issue
+  const existingIssue = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
+    issueId,
+  ]);
+
+  // Not found
+  if (existingIssue.rows.length === 0) {
+    throw new Error("Issue not found");
+  }
+
+  const issue = existingIssue.rows[0];
+
+  // Permission Logic
+
+  // Maintainer can update anything
+  if (user.role !== "maintainer") {
+    // Contributor can only update own issue
+    if (issue.reporter_id !== user.id) {
+      throw new Error("You are not allowed to update this issue");
+    }
+
+    // Contributor can update only open issues
+    if (issue.status !== "open") {
+      throw new Error("You can only update open issues");
+    }
+  }
+
+  // Update values
+  const updatedTitle = payload.title || issue.title;
+
+  const updatedDescription = payload.description || issue.description;
+
+  const updatedType = payload.type || issue.type;
+
+  // Update query
+  const result = await pool.query(
+    `
+      UPDATE issues
+      SET
+        title = $1,
+        description = $2,
+        type = $3,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *
+    `,
+    [updatedTitle, updatedDescription, updatedType, issueId],
+  );
+
+  return result.rows[0];
+};
+
+const deleteIssueFromDB = async (issueId: number) => {
+  // Check issue exists
+  const existingIssue = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
+    issueId,
+  ]);
+
+  if (existingIssue.rows.length === 0) {
+    throw new Error("Issue not found");
+  }
+
+  // Delete issue
+  await pool.query(`DELETE FROM issues WHERE id = $1`, [issueId]);
+
+  return true;
+};
 
 
 export const issueService = {
   createIssueIntoDB,
   getAllIssues,
   getSingleIssueFromDB,
+  updateIssue,
+  deleteIssueFromDB
 };

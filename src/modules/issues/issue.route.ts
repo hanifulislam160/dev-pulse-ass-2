@@ -21,10 +21,10 @@ router.get("/issues", issueController.getAllIssues);
 router.get("/issues/:id", issueController.getSingleIssue);
 
 router.patch(
-  "/:id",
+  "/issues/:id",
   authMiddleware,
   authorizeRole("contributor", "maintainer"),
-  issueController.updateIssue,
+  issueController.updateIssue
 );
 
 // maintainer only

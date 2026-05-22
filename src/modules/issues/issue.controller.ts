@@ -111,8 +111,54 @@ const getSingleIssue = async (req: Request, res: Response) => {
 
 
 
+const updateIssue = async (req: AuthRequest, res: Response) => {
+  try {
+    const issueId = Number(req.params.id);
+
+    if (isNaN(issueId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid issue id",
+      });
+    }
+
+    const user = req.user;
+
+    const { title, description, type } = req.body;
+
+    // Optional validation
+    if (description && description.length < 20) {
+      return res.status(400).json({
+        success: false,
+        message: "Description must be at least 20 characters",
+      });
+    }
+
+    const result = await issueService.updateIssue(issueId, user, {
+      title,
+      description,
+      type,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Issue updated successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(403).json({
+      success: false,
+      message: error.message || "Failed to update issue",
+    });
+  }
+};
+
+
+
+
 export const issueController = {
   createIssue,
   getAllIssues,
   getSingleIssue,
+  updateIssue,
 };
