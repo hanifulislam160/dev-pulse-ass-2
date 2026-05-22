@@ -18,6 +18,14 @@ router.post(
 );
 
 router.get("/issues", issueController.getAllIssues);
+router.get("/issues/:id", issueController.getSingleIssue);
+
+router.patch(
+  "/:id",
+  authMiddleware,
+  authorizeRole("contributor", "maintainer"),
+  issueController.updateIssue,
+);
 
 // maintainer only
 // router.delete(

@@ -1,5 +1,5 @@
 import { pool } from "../../db";
-import type { CreateIssuePayload, GetIssuesQuery, IssueWithReporter } from "./issue.interface";
+import type { CreateIssuePayload, GetIssuesQuery, IssueWithReporter, SingleIssue } from "./issue.interface";
 
 
 
@@ -88,7 +88,39 @@ const getAllIssues = async (
 };
 
 
+
+// get single Issue
+
+const getSingleIssueFromDB = async (id: number): Promise<SingleIssue | null> => {
+  const sql = `
+    SELECT 
+      i.id,
+      i.title,
+      i.description,
+      i.type,
+      i.status,
+      i.created_at,
+      i.updated_at,
+      json_build_object(
+        'id', u.id,
+        'name', u.name,
+        'role', u.role
+      ) AS reporter
+    FROM issues i
+    JOIN users u ON i.reporter_id = u.id
+    WHERE i.id = $1
+  `;
+
+  const result = await pool.query(sql, [id]);
+
+  return result.rows[0] || null;
+};
+
+
+
+
 export const issueService = {
   createIssueIntoDB,
-  getAllIssues
+  getAllIssues,
+  getSingleIssueFromDB,
 };
