@@ -154,6 +154,32 @@ const updateIssue = async (req: AuthRequest, res: Response) => {
 };
 
 
+const deleteIssue = async (req: AuthRequest, res: Response) => {
+  try {
+    const issueId = Number(req.params.id);
+
+    // Validate ID
+    if (isNaN(issueId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid issue id",
+      });
+    }
+
+    await issueService.deleteIssueFromDB(issueId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Issue deleted successfully",
+    });
+  } catch (error: any) {
+    return res.status(404).json({
+      success: false,
+      message: error.message || "Failed to delete issue",
+    });
+  }
+};
+
 
 
 export const issueController = {
@@ -161,4 +187,5 @@ export const issueController = {
   getAllIssues,
   getSingleIssue,
   updateIssue,
+  deleteIssue,
 };

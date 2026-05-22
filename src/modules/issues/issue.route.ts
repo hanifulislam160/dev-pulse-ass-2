@@ -27,12 +27,13 @@ router.patch(
   issueController.updateIssue
 );
 
-// maintainer only
-// router.delete(
-//   "/:id",
-//   authMiddleware,
-//   authorizeRole("maintainer"),
-//   issueController.deleteIssue,
-// );
+
+router.delete(
+  "/issues/:id",
+  authMiddleware,
+  authorizeRole("maintainer"),
+  issueController.deleteIssue,
+);
+
 
 export const issueRoutes = router;
