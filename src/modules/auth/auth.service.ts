@@ -18,7 +18,6 @@ const signUpUserIntoDB = async (payload: IUser) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
 
-
   const user = await pool.query(
     "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, created_at, updated_at",
     [name, email, hashedPassword, role],
