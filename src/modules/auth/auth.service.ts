@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import { pool } from "../../db";
 import type { IUser } from "./auth.interface";
+import jwt from "jsonwebtoken";
+
 
 const signUpUserIntoDB = async (payload: IUser) => {
   const { name, email, password, role } = payload;
@@ -25,4 +27,51 @@ const signUpUserIntoDB = async (payload: IUser) => {
   return user.rows[0];
 };
 
-export const authService = { signUpUserIntoDB };
+
+const loginUserFromDB = async (email: string, password: string) => {
+  // Find user
+  const user = await pool.query("SELECT * FROM users WHERE email = $1", [
+    email,
+  ]);
+
+  // Check user exists
+  if (user.rows.length === 0) {
+    throw new Error("Invalid email or password");
+  }
+
+  const existingUser = user.rows[0];
+
+  // Compare password
+  const isPasswordMatched = await bcrypt.compare(
+    password,
+    existingUser.password,
+  );
+
+  if (!isPasswordMatched) {
+    throw new Error("Invalid email or password");
+  }
+
+  // Create JWT token
+  const token = jwt.sign(
+    {
+      id: existingUser.id,
+      email: existingUser.email,
+      role: existingUser.role,
+    },
+    process.env.JWT_SECRET as string,
+    {
+      expiresIn: "1d",
+    },
+  );
+
+  // Remove password
+  const { password: _, ...userWithoutPassword } = existingUser;
+
+  return {
+    token,
+    user: userWithoutPassword,
+  };
+};
+
+
+export const authService = { signUpUserIntoDB ,loginUserFromDB};
