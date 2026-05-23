@@ -1,9 +1,12 @@
 import { pool } from "../../db";
+import AppError from "../../utils/AppError";
 import type {
   CreateIssuePayload,
   GetIssuesQuery,
   IssueWithReporter,
   SingleIssue,
+  TUserSession,
+  UpdateIssuePayload,
 } from "./issue.interface";
 
 const createIssueIntoDB = async (
@@ -38,7 +41,8 @@ const createIssueIntoDB = async (
   return result.rows[0];
 };
 
-const getAllIssues = async (
+// getAllIssuesFromDB;
+const getAllIssuesFromDB = async (
   query: GetIssuesQuery,
 ): Promise<IssueWithReporter[]> => {
   const { sort = "newest", type, status } = query;
@@ -114,18 +118,13 @@ const getSingleIssueFromDB = async (
 
   const result = await pool.query(sql, [id]);
 
-  return result.rows[0] || null;
+  return result.rows[0];
 };
 
-interface UpdateIssuePayload {
-  title?: string;
-  description?: string;
-  type?: "bug" | "feature_request";
-}
 
 const updateIssue = async (
   issueId: number,
-  user: any,
+  user: TUserSession,
   payload: UpdateIssuePayload,
 ) => {
   // Find existing issue
@@ -135,32 +134,30 @@ const updateIssue = async (
 
   // Not found
   if (existingIssue.rows.length === 0) {
-    throw new Error("Issue not found");
+    throw new AppError(400, "Issue not found");
   }
 
   const issue = existingIssue.rows[0];
-
-  // Permission Logic
 
   // Maintainer can update anything
   if (user.role !== "maintainer") {
     // Contributor can only update own issue
     if (issue.reporter_id !== user.id) {
-      throw new Error("You are not allowed to update this issue");
+      throw new AppError(400,"You are not allowed to update this issue");
     }
 
     // Contributor can update only open issues
     if (issue.status !== "open") {
-      throw new Error("You can only update open issues");
+      throw new AppError(400,"You can only update open issues");
     }
   }
 
   // Update values
-  const updatedTitle = payload.title || issue.title;
+  const updatedTitle = payload.title;
 
-  const updatedDescription = payload.description || issue.description;
+  const updatedDescription = payload.description;
 
-  const updatedType = payload.type || issue.type;
+  const updatedType = payload.type;
 
   // Update query
   const result = await pool.query(
@@ -187,7 +184,7 @@ const deleteIssueFromDB = async (issueId: number) => {
   ]);
 
   if (existingIssue.rows.length === 0) {
-    throw new Error("Issue not found");
+    throw new AppError(400, "Issue not found");
   }
 
   // Delete issue
@@ -198,7 +195,7 @@ const deleteIssueFromDB = async (issueId: number) => {
 
 export const issueService = {
   createIssueIntoDB,
-  getAllIssues,
+  getAllIssuesFromDB,
   getSingleIssueFromDB,
   updateIssue,
   deleteIssueFromDB,

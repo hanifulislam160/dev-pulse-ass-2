@@ -32,7 +32,7 @@ const signUpUser = async (req: Request, res: Response, next: NextFunction) => {
     sendResponse(res, {
       success: true,
       statusCode: 201,
-      message: "User created successfully",
+      message: "User registered successfully",
       data: result,
     });
   } catch (error) {

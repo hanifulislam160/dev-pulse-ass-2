@@ -43,3 +43,15 @@ export interface SingleIssue {
   created_at: string;
   updated_at: string;
 }
+
+export interface UpdateIssuePayload {
+  title?: string;
+  description?: string;
+  type?: "bug" | "feature_request";
+}
+
+export interface TUserSession {
+  id: number;
+  email: string;
+  role: "contributor" | "maintainer";
+}
