@@ -1,3 +1,4 @@
+import cors from "cors";
 import express, {
   type Application,
   type Request,
@@ -15,11 +16,17 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(logger);
 
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  }),
+);
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Devpulse Assignment 2");
 });
 
-app.use('/api', authRoute)
+app.use("/api", authRoute);
 app.use("/api", issueRoutes);
 
 app.use(globalErrorHandler);
