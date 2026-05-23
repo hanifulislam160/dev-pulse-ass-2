@@ -1,7 +1,10 @@
 import { pool } from "../../db";
-import type { CreateIssuePayload, GetIssuesQuery, IssueWithReporter, SingleIssue } from "./issue.interface";
-
-
+import type {
+  CreateIssuePayload,
+  GetIssuesQuery,
+  IssueWithReporter,
+  SingleIssue,
+} from "./issue.interface";
 
 const createIssueIntoDB = async (
   payload: CreateIssuePayload,
@@ -35,8 +38,6 @@ const createIssueIntoDB = async (
   return result.rows[0];
 };
 
-
-
 const getAllIssues = async (
   query: GetIssuesQuery,
 ): Promise<IssueWithReporter[]> => {
@@ -57,20 +58,20 @@ const getAllIssues = async (
 
   let sql = `
     SELECT 
-      i.id,
-      i.title,
-      i.description,
-      i.type,
-      i.status,
-      i.created_at,
-      i.updated_at,
-      json_build_object(
-        'id', u.id,
-        'name', u.name,
-        'role', u.role
-      ) AS reporter
-    FROM issues i
-    JOIN users u ON i.reporter_id = u.id
+    i.id,
+    i.title,
+    i.description,
+    i.type,
+    i.status,
+    json_build_object(
+      'id', u.id,
+      'name', u.name,
+      'role', u.role
+    ) AS reporter,
+    i.created_at,
+    i.updated_at
+  FROM issues i
+  JOIN users u ON i.reporter_id = u.id
   `;
 
   if (conditions.length > 0) {
@@ -87,11 +88,11 @@ const getAllIssues = async (
   return result.rows;
 };
 
-
-
 // get single Issue
 
-const getSingleIssueFromDB = async (id: number): Promise<SingleIssue | null> => {
+const getSingleIssueFromDB = async (
+  id: number,
+): Promise<SingleIssue | null> => {
   const sql = `
     SELECT 
       i.id,
@@ -99,13 +100,13 @@ const getSingleIssueFromDB = async (id: number): Promise<SingleIssue | null> => 
       i.description,
       i.type,
       i.status,
-      i.created_at,
-      i.updated_at,
       json_build_object(
         'id', u.id,
         'name', u.name,
         'role', u.role
-      ) AS reporter
+      ) AS reporter,
+      i.created_at,
+      i.updated_at
     FROM issues i
     JOIN users u ON i.reporter_id = u.id
     WHERE i.id = $1
@@ -115,7 +116,6 @@ const getSingleIssueFromDB = async (id: number): Promise<SingleIssue | null> => 
 
   return result.rows[0] || null;
 };
-
 
 interface UpdateIssuePayload {
   title?: string;
@@ -196,11 +196,10 @@ const deleteIssueFromDB = async (issueId: number) => {
   return true;
 };
 
-
 export const issueService = {
   createIssueIntoDB,
   getAllIssues,
   getSingleIssueFromDB,
   updateIssue,
-  deleteIssueFromDB
+  deleteIssueFromDB,
 };
