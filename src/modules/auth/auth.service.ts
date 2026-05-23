@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { pool } from "../../db";
 import type { IUser } from "./auth.interface";
 import jwt from "jsonwebtoken";
+import AppError from "../../utils/AppError";
 
 
 const signUpUserIntoDB = async (payload: IUser) => {
@@ -12,11 +13,10 @@ const signUpUserIntoDB = async (payload: IUser) => {
   ]);
 
   if (checkUser.rows.length) {
-    throw new Error("User already exist with this email");
+    throw new AppError(400, "User already exists with this email");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-
 
   const user = await pool.query(
     "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, created_at, updated_at",
@@ -35,7 +35,7 @@ const loginUserFromDB = async (email: string, password: string) => {
 
   // Check user exists
   if (user.rows.length === 0) {
-    throw new Error("Invalid email or password");
+    throw new AppError(400, "Invalid email or password");
   }
 
   const existingUser = user.rows[0];
@@ -47,7 +47,7 @@ const loginUserFromDB = async (email: string, password: string) => {
   );
 
   if (!isPasswordMatched) {
-    throw new Error("Invalid email or password");
+    throw new AppError(400,"Invalid email or password");
   }
 
   // Create JWT token
